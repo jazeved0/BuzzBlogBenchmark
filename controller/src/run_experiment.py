@@ -8,9 +8,11 @@ import re
 import subprocess
 import threading
 import time
+import socket
 
 import jinja2
 import yaml
+import paramiko
 
 from ssh_client import SSHClient
 
@@ -143,6 +145,32 @@ def configure_kernel(node_hostname, node_conf, ssh_client):
       for param, value in node_conf.get("kernel", {}).items()]))
 
 
+@nodes_with_container("^((?!loadgen).)*$")
+def enable_cgroup_v2(node_hostname, node_conf, ssh_client):
+  # Based on https://rootlesscontaine.rs/getting-started/common/cgroup2/
+  # sed command from: https://unix.stackexchange.com/a/408685
+  ssh_client.exec(" && ".join([
+    """sudo sed -i 's/GRUB_CMDLINE_LINUX="[^"]*/& systemd.unified_cgroup_hierarchy=1/' /etc/default/grub""",
+    "sudo update-grub",
+    "sudo shutdown -r now > /dev/null 2>&1 &"]))
+  # Wait for the server to reboot by constantly trying to reconnect
+  timeout_min = 10
+  start = datetime.datetime.now()
+  while True:
+    time.sleep(10) # seconds
+    try:
+      ssh_client = SSHClient(node_hostname, node_conf["ssh"]["port"],
+          node_conf["ssh"]["username"], node_conf["ssh"]["key_filename"],
+          os.path.join(DIRNAME, "ssh",
+          "%s-%s" % (node_hostname, "enable_cgroup_v2")),
+          connect_timeout=15) # seconds
+      ssh_client.exec("echo 'Reboot test'")
+      return
+    except (socket.error, paramiko.SSHException):
+      if ((datetime.datetime.now() - start).total_seconds() / 60) > timeout_min:
+        raise RuntimeError("server {} did not reboot in {} minutes".format(node_hostname, timeout_min))
+
+
 @all_nodes
 def get_system_specs(node_hostname, node_conf, ssh_client):
   with open(os.path.join(DIRNAME, "specs", node_hostname, "hw"), "wb+") as \
@@ -198,7 +226,7 @@ def install_collectl(node_hostname, node_conf, ssh_client):
 def install_radvisor(node_hostname, node_conf, ssh_client):
   # Note: we specify to only compile the Docker feature, which disables
   # compiling Kubernetes support via conditional compilation.
-  VERSION = "1.3.1"
+  VERSION = "1.4.0"
   ssh_client.exec(
       "sudo apt-get update && "
       "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y rustc cargo && "
@@ -345,6 +373,7 @@ def fetch_container_logs(node_hostname, node_conf, ssh_client):
 
 def run():
   configure_kernel()
+  enable_cgroup_v2()
   get_system_specs()
   install_docker()
   install_bpfcc()

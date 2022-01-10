@@ -10,13 +10,14 @@ import scp
 class SSHClient:
   """A wrapper around paramiko.SSHClient."""
 
-  def __init__(self, hostname, port, username, key_filename, log_filename):
+  def __init__(self, hostname, port, username, key_filename, log_filename, connect_timeout=None):
     """Initialize an SSH client."""
     self._hostname = hostname
     self._client = paramiko.SSHClient()
     self._client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     self._client.connect(hostname=hostname, port=port, username=username,
-        key_filename=key_filename)
+        key_filename=key_filename, timeout=connect_timeout,
+        banner_timeout=connect_timeout, auth_timeout=connect_timeout)
     self._log_filename = log_filename
 
   def exec(self, command):
