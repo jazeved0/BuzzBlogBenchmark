@@ -98,11 +98,12 @@ class TargetLogEntryCgroupV1:
 
         io_keys = {k for k in row if (
             k.startswith("blkio.") and k not in {"blkio.time", "blkio.sectors"})}
-        io_fields = {k.replace('.', '_'): io(v) for k, v in row if k in io_keys}
+        io_key_prefixes = {k.rstrip(".read") for k in io_keys if k.endswith(".read")}
+        io_fields = {k.replace('.', '_'): io(k) for k in row if k in io_key_prefixes}
 
         int_keys = {k for k in row if (
             k not in {"pids.max", "cpu.usage.percpu"} and k not in io_keys)}
-        int_fields = {k.replace('.', '_'): i(v) for k, v in row if k in int_keys}
+        int_fields = {k.replace('.', '_'): i(k) for k in row if k in int_keys}
 
         pids_max = "max" if row["pids.max"] == "max" else i("pids.max")
         cpu_usage_percpu = []
@@ -117,7 +118,7 @@ class TargetLogEntryCgroupV2:
     read: int
     # PID stats
     pids_current: int
-    pids_max: Union[int, str]
+    pids_max: Union[int, "max"]
     # CPU stats
     cpu_stat__usage_usec: int
     cpu_stat__system_usec: int
@@ -127,8 +128,8 @@ class TargetLogEntryCgroupV2:
     cpu_stat__throttled_usec: int
     # Memory stats
     memory_current: int
-    memory_high: int
-    memory_max: int
+    memory_high: Union[int, "max"]
+    memory_max: Union[int, "max"]
     memory_stat__anon: int
     memory_stat__file: int
     memory_stat__kernel_stack: int
@@ -163,12 +164,15 @@ class TargetLogEntryCgroupV2:
                 return int(row[key])
             return 0
 
-        # Every field is an int, except for pids_max,
+        # Every field is an int, except for pids_max, memory_max, and memory_high,
         # and every field is the same as its column label,
         # except s/./_/ and s/\//__/
-        fields = {k.replace('.', '_').replace('/', '__'): i(v) for k, v in row if k != "pids.max"}
-        pids_max = "max" if row["pids.max"] == "max" else i("pids.max")
-        return TargetLogEntryCgroupV2(**fields, pids_max=pids_max)
+        or_max_field_keys = {"pids.max", "memory.max", "memory.high"}
+        or_max_fields = {k.replace('.', '_').replace('/', '__'): (
+            "max" if row[k] == "max" else i(k))
+            for k in row if k in or_max_field_keys}
+        fields = {k.replace('.', '_').replace('/', '__'): i(k) for k in row if k not in or_max_field_keys}
+        return TargetLogEntryCgroupV2(**fields, **or_max_fields)
 
 @dataclass
 class BufferFlushLogEntry:
@@ -234,7 +238,8 @@ def parse_target_log(lines: Iterable[str]) -> Tuple[Union[Iterable[TargetLogEntr
                 elif collector_type == "cgroup_v2":
                     yield TargetLogEntryCgroupV2.make(row)
             except Exception as e:
-                print(e)
+                import traceback
+                traceback.print_exc()
                 print("An error ocurred. continuing...\n")
 
     return (generator(), metadata)
