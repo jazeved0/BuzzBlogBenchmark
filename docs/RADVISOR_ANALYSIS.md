@@ -71,7 +71,7 @@ specifically, the following variables:
 
 - `EXPERIMENT_DIRNAME`, which should be set to point to the experiment path (sub-directory in `../data`)
 - `NODE_NAME`, which should be set to point to hostname that the container was running on (sub-directory in `../data/{experiment_dirname}/logs`)
-- `EXPERIMENT_DIRNAME`, which should be a prefix of or the full Docker container ID (which will be the first part before the underscore in the filenames inside `../data/{experiment_dirname}/logs/{node_name}/radvisor.tar.gz`)
+- `CONTAINER_ID`, which should be a prefix of or the full Docker container ID (which will be the first part before the underscore in the filenames inside `../data/{experiment_dirname}/logs/{node_name}/radvisor.tar.gz`)
 
 Once these have been set to point to the desired log file, click Cell > Run All in the menu to run the entire notebook:
 
@@ -94,30 +94,22 @@ They all have two inputs in common:
 #### CPU Point-in-time / line graph
 
 This graph plots the CPU utilization of the container's workload over the course of the experiment.
-In addition to the 2 common inputs for every point-in-time graph, it also has an extra input: `PER_CPU_AGGREGATION_FUNCTION`.
-This function should be in the form of `def aggregate(xs: list[float]) -> float`,
-and controls how each of the individual per-core CPU utilization time-series are aggregated into a single time-series.
-This aggregation occurs at each source data-point/sample, and occurs before window aggregation.
 
 ![cpu point-in-time](./img/radvisor_cpu_pit.png)
 
 #### Memory Point-in-time / line graph
 
 This graph plots the memory usage of the container's workload over the course of the experiment.
-This value comes from the `usage_in_bytes` value
-from the [Linux cgroups v1 memory controller](https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt),
-and is an inexact summary of how much memory a container is "using."
+This value comes from the `memory.current` value
+from the [Linux cgroup v2 memory controller](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#memory-interface-files),
+and is a summary of how much memory a container is "using."
 
 ![memory point-in-time](./img/radvisor_mem_pit.png)
 
 #### I/O (Read, Write) Point-in-time / line graph
 
 The two IO graphs plot both Read and Write block (disk) I/O done by the container's workload over the course of the experiment.
-Note that they only reliably account for [direct (unbuffered) I/O](https://lwn.net/Articles/806980/)
-that doesn't touch the system's page cache and writeback mechanism.
-Reads that only read from the page cache won't be accounted for at all,
-and writes that write to the page cache and are only later flushed to disk via the writeback mechanism
-[may not be accounted for reliably](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?h=v4.14-rc4&id=3e1534cf4a2a8278e811e7c84a79da1a02347b8b).
+Note that reads and writes that only hit the OS's page cache won't appear here, since those happen entirely in-memory.
 
 ![i/o point-in-time](./img/radvisor_io_pit.png)
 
@@ -127,20 +119,18 @@ Each of these graphs shows the distribution of raw data points
 (except in the case of CPU, which still aggregates per-core data points to a single time-series)
 for either CPU utilization, memory usage, or block I/O.
 
+Each graph has a single input, in the format of `{GRAPH}_NUM_BINS`, which controls how many Histogram bins the graph should include
+(letting matplotlib automatically size the width of each bin accordingly).
+
 #### CPU Histogram
 
-This graph has two inputs: `CPU_UTIL_PERCENT_BIN_SIZE` and `PER_CPU_AGGREGATION_FUNCTION`.
-`PER_CPU_AGGREGATION_FUNCTION` does the same thing as with the CPU point-in-time graph
-(as mentioned before, this graph shows a histogram of the data points after the per-core aggregation, but without any window aggregation).
-On the other hand, `CPU_UTIL_PERCENT_BIN_SIZE` is an input specific to this graph that controls how big, in core-%, each Histogram bin should be.
+This graph shows the distribution of CPU usage samples over the course of the experiment.
 
 ![cpu histogram](./img/radvisor_cpu_hist.png)
 
 #### Memory Histogram
 
-This graph shows the distribution of memory usage samples over the course of the experiment,
-and has a single input: `MEMORY_MIB_BIN_SIZE`.
-This controls the size, in MiB (mebibytes) of each Histogram bin.
+This graph shows the distribution of memory usage samples over the course of the experiment.
 
 ![memory histogram](./img/radvisor_mem_hist.png)
 
@@ -148,7 +138,5 @@ This controls the size, in MiB (mebibytes) of each Histogram bin.
 
 The two IO graphs plot the distribution of Read and Write block (disk) I/O done over the course of the experiment.
 Each point is taken from the raw read/write data-series, which contain how much data was read from/written to disk in the sampling interval.
-It has a single input, `IO_NUM_BINS`, which controls how many Histogram bins the graph should include
-(letting matplotlib automatically size the width of each bin accordingly).
 
 ![i/o histogram](./img/radvisor_io_hist.png)
