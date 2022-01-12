@@ -33,16 +33,6 @@
         subsys: "CDM"
         options: "Tm"
         plot: ""
-    radvisor:
-      command: radvisor run docker
-      dirpath: "/tmp/radvisor"
-      niceness: 19
-      log: "/tmp/radvisor/out.log"
-      options:
-        verbose: ""
-        directory: "/tmp/radvisor/stat"
-        interval: "50ms"
-        poll: "2s"
 {{apigateway_node}}:
   ssh:
     username: "{{username}}"
@@ -162,16 +152,6 @@
         subsys: "CDM"
         options: "Tm"
         plot: ""
-    radvisor:
-      command: radvisor run docker
-      dirpath: "/tmp/radvisor"
-      niceness: 19
-      log: "/tmp/radvisor/out.log"
-      options:
-        verbose: ""
-        directory: "/tmp/radvisor/stat"
-        interval: "50ms"
-        poll: "2s"
 {{account_service_node}}:
   ssh:
     username: "{{username}}"
@@ -214,16 +194,6 @@
         subsys: "CDM"
         options: "Tm"
         plot: ""
-    radvisor:
-      command: radvisor run docker
-      dirpath: "/tmp/radvisor"
-      niceness: 19
-      log: "/tmp/radvisor/out.log"
-      options:
-        verbose: ""
-        directory: "/tmp/radvisor/stat"
-        interval: "50ms"
-        poll: "2s"
 {{account_database_node}}:
   ssh:
     username: "{{username}}"
@@ -261,16 +231,6 @@
         subsys: "CDM"
         options: "Tm"
         plot: ""
-    radvisor:
-      command: radvisor run docker
-      dirpath: "/tmp/radvisor"
-      niceness: 19
-      log: "/tmp/radvisor/out.log"
-      options:
-        verbose: ""
-        directory: "/tmp/radvisor/stat"
-        interval: "50ms"
-        poll: "2s"
 {{follow_service_node}}:
   ssh:
     username: "{{username}}"
@@ -312,16 +272,6 @@
         subsys: "CDM"
         options: "Tm"
         plot: ""
-    radvisor:
-      command: radvisor run docker
-      dirpath: "/tmp/radvisor"
-      niceness: 19
-      log: "/tmp/radvisor/out.log"
-      options:
-        verbose: ""
-        directory: "/tmp/radvisor/stat"
-        interval: "50ms"
-        poll: "2s"
 {{like_service_node}}:
   ssh:
     username: "{{username}}"
@@ -363,16 +313,6 @@
         subsys: "CDM"
         options: "Tm"
         plot: ""
-    radvisor:
-      command: radvisor run docker
-      dirpath: "/tmp/radvisor"
-      niceness: 19
-      log: "/tmp/radvisor/out.log"
-      options:
-        verbose: ""
-        directory: "/tmp/radvisor/stat"
-        interval: "50ms"
-        poll: "2s"
 {{post_service_node}}:
   ssh:
     username: "{{username}}"
@@ -415,16 +355,6 @@
         subsys: "CDM"
         options: "Tm"
         plot: ""
-    radvisor:
-      command: radvisor run docker
-      dirpath: "/tmp/radvisor"
-      niceness: 19
-      log: "/tmp/radvisor/out.log"
-      options:
-        verbose: ""
-        directory: "/tmp/radvisor/stat"
-        interval: "50ms"
-        poll: "2s"
 {{post_database_node}}:
   ssh:
     username: "{{username}}"
@@ -462,16 +392,6 @@
         subsys: "CDM"
         options: "Tm"
         plot: ""
-    radvisor:
-      command: radvisor run docker
-      dirpath: "/tmp/radvisor"
-      niceness: 19
-      log: "/tmp/radvisor/out.log"
-      options:
-        verbose: ""
-        directory: "/tmp/radvisor/stat"
-        interval: "50ms"
-        poll: "2s"
 {{uniquepair_service_node}}:
   ssh:
     username: "{{username}}"
@@ -514,16 +434,6 @@
         subsys: "CDM"
         options: "Tm"
         plot: ""
-    radvisor:
-      command: radvisor run docker
-      dirpath: "/tmp/radvisor"
-      niceness: 19
-      log: "/tmp/radvisor/out.log"
-      options:
-        verbose: ""
-        directory: "/tmp/radvisor/stat"
-        interval: "50ms"
-        poll: "2s"
 {{uniquepair_database_node}}:
   ssh:
     username: "{{username}}"
@@ -561,13 +471,3 @@
         subsys: "CDM"
         options: "Tm"
         plot: ""
-    radvisor:
-      command: radvisor run docker
-      dirpath: "/tmp/radvisor"
-      niceness: 19
-      log: "/tmp/radvisor/out.log"
-      options:
-        verbose: ""
-        directory: "/tmp/radvisor/stat"
-        interval: "50ms"
-        poll: "2s"
